@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <title>Plagiaatcontrole</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; }
+    table { border-collapse: collapse; width: 80%; }
+    th, td { border: 1px solid #aaa; padding: 8px 12px; text-align: center; }
+    th { background-color: #f0f0f0; }
+    tr:nth-child(even) { background-color: #fafafa; }
+  </style>
+</head>
+<body>
+  <h2>Plagiaatdetectie - Vergelijkingstabel</h2>
+  <table>
+    <tr>
+      <th>Combinatie</th>
+      {% for s in students %}
+        <th>{{ s }}</th>
+      {% endfor %}
+    </tr>
+
+    {% for s1 in students %}
+    <tr>
+      <td><b>{{ s1 }}</b></td>
+      {% for s2 in students %}
+        {% if s1 == s2 %}
+          <td>/</td>
+        {% elif s2 in comments.get(s1, {}) %}
+          <td>{{ ", ".join(comments[s1][s2]) }}</td>
+        {% elif s1 in comments.get(s2, {}) %}
+          <td>{{ ", ".join(comments[s2][s1]) }}</td>
+        {% else %}
+          <td>/</td>
+        {% endif %}
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  </table>
+</body>
+</html>
