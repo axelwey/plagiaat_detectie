@@ -2,6 +2,7 @@
 from jinja2 import Environment,FileSystemLoader
 from pathlib import Path
 import re 
+import libcst
 
 pad=input("Geef het path dat ik moet doorzoeken?\n>")
 pad=Path(pad)
@@ -24,6 +25,17 @@ for d in studenten_mappen:
 students=list(student_files.keys())
 comments={a1: {a2: [] for a2 in students if a2!=a1} for a1 in students}
 
+class GetComment(libcst.CSTVisitor):
+    def __init__(self):
+        self.totaal=[]
+    def visit_Comment(self, node):
+        self.totaal.append(node.value.strip())
+def get_comments(content):
+    module=libcst.parse_module(content)
+    visitor=GetComment()
+    module.visit(visitor)
+    return visitor.totaal
+
 for i,s1 in enumerate(students):
     files1=student_files[s1]
     if len(files1)!=1:
@@ -40,11 +52,12 @@ for i,s1 in enumerate(students):
         if content1==content2:
             comments[s1][s2].append("identieke file")
         else:
-            comments_file1=[c.strip() for c in re.findall(r"#\s*.*",content1)]
-            comments_file2=[c.strip() for c in re.findall(r"#\s*.*",content2)]
-            for com in comments_file1:
-                if com in comments_file2:
+            comments_1=get_comments(content1)
+            comments_2=get_comments(content2)
+            for com in comments_1:
+                if com in comments_2:
                     comments[s1][s2].append(f"identieke comment: '{com}'")
+            
 
 
 env = Environment(loader=FileSystemLoader("."))
