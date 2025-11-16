@@ -25,7 +25,7 @@ for d in studenten_mappen:
     py_files=list(d.glob("*.py"))
     student_files[d.name]=py_files
 
-students=list(student_files.keys())
+students = sorted(student_files.keys(), key=lambda x: int(x[1:]))
 comments={a1: {a2: [] for a2 in students if a2!=a1} for a1 in students}
 
 class GetComment(libcst.CSTVisitor):
@@ -70,6 +70,11 @@ def get_misspelled_words(content):
 class CSTTranformer(libcst.CSTTransformer):
     def leave_Comment(self, original_node, updated_node):
         return RemoveFromParent()
+    def leave_EmptyLine(self, original_node, updated_node):
+        return RemoveFromParent()
+
+    def leave_TrailingWhitespace(self, original_node, updated_node):
+        return updated_node.with_changes(whitespace=libcst.SimpleWhitespace(""))
 def get_without_comments(content):
     module = libcst.parse_module(content)
     transformer=CSTTranformer()
