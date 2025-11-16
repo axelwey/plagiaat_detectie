@@ -1,11 +1,13 @@
 #dict[str, dict[str, list[str]]]
 from jinja2 import Environment,FileSystemLoader
 from pathlib import Path
-import re 
+import ast
+from spellchecker import SpellChecker
 import libcst
 
 pad=input("Geef het path dat ik moet doorzoeken?\n>")
 pad=Path(pad)
+spell=SpellChecker()
 if not pad.exists():
     print("pad bestaat niet.")
     exit()
@@ -36,6 +38,35 @@ def get_comments(content):
     module.visit(visitor)
     return visitor.totaal
 
+class LexiconCollector(libcst.CSTVisitor):
+    def __init__(self):
+        self.words= set()
+    def visit_Name(self, node):
+        text=node.value
+        for piece in text.replace("_"," ").split():
+            cleaned="".join(ch for ch in piece if ch.isalpha())
+        if cleaned:
+            self.words.add(cleaned.lower())
+    def visit_SimpleString(self, node):
+        raw=node.value
+        try:
+            real_string = ast.literal_eval(raw)
+        except Exception:
+            real_string=raw
+        for piece in real_string.split():
+            cleaned= "".join(ch for ch in piece if ch.isalpha())
+            if cleaned:
+                self.words.add(cleaned.lower())
+
+def get_misspelled_words(content):
+    module = libcst.parse_module(content)
+    visitor=LexiconCollector()
+    module.visit(visitor)
+    words=visitor.words
+    misspelled=spell.unknown(words)
+    return misspelled
+
+            
 for i,s1 in enumerate(students):
     files1=student_files[s1]
     if len(files1)!=1:
@@ -57,6 +88,11 @@ for i,s1 in enumerate(students):
             for com in comments_1:
                 if com in comments_2:
                     comments[s1][s2].append(f"identieke comment: '{com}'")
+            misspelled_1=get_misspelled_words(content1)
+            misspelled_2=get_misspelled_words(content2)
+            common_misspelled= misspelled_1 & misspelled_2
+            for word in common_misspelled:
+                comments[s1][s2].append(f"gemeenschappelijke spelfout: '{word}'")
             
 
 
