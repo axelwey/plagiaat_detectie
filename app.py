@@ -4,6 +4,7 @@ from pathlib import Path
 import ast
 from spellchecker import SpellChecker
 import libcst
+from libcst import RemoveFromParent
 
 pad=input("Geef het path dat ik moet doorzoeken?\n>")
 pad=Path(pad)
@@ -45,8 +46,8 @@ class LexiconCollector(libcst.CSTVisitor):
         text=node.value
         for piece in text.replace("_"," ").split():
             cleaned="".join(ch for ch in piece if ch.isalpha())
-        if cleaned:
-            self.words.add(cleaned.lower())
+            if cleaned:
+                self.words.add(cleaned.lower())
     def visit_SimpleString(self, node):
         raw=node.value
         try:
@@ -65,6 +66,15 @@ def get_misspelled_words(content):
     words=visitor.words
     misspelled=spell.unknown(words)
     return misspelled
+
+class CSTTranformer(libcst.CSTTransformer):
+    def leave_Comment(self, original_node, updated_node):
+        return RemoveFromParent()
+def get_without_comments(content):
+    module = libcst.parse_module(content)
+    transformer=CSTTranformer()
+    new_tree = module.visit(transformer)
+    return new_tree
 
             
 for i,s1 in enumerate(students):
@@ -85,14 +95,19 @@ for i,s1 in enumerate(students):
         else:
             comments_1=get_comments(content1)
             comments_2=get_comments(content2)
-            for com in comments_1:
-                if com in comments_2:
-                    comments[s1][s2].append(f"identieke comment: '{com}'")
-            misspelled_1=get_misspelled_words(content1)
-            misspelled_2=get_misspelled_words(content2)
-            common_misspelled= misspelled_1 & misspelled_2
-            for word in common_misspelled:
-                comments[s1][s2].append(f"gemeenschappelijke spelfout: '{word}'")
+            without_comments_1=get_without_comments(content1)
+            without_comments_2=get_without_comments(content2)
+            if without_comments_1.deep_equals(without_comments_2):
+                comments[s1][s2].append(f"identieke file zonder comments")
+            else:
+                for com in comments_1:
+                    if com in comments_2:
+                        comments[s1][s2].append(f"identieke comment: '{com}'")
+                misspelled_1=get_misspelled_words(content1)
+                misspelled_2=get_misspelled_words(content2)
+                common_misspelled= misspelled_1 & misspelled_2
+                for word in common_misspelled:
+                    comments[s1][s2].append(f"gemeenschappelijke spelfout: '{word}'")
             
 
 
