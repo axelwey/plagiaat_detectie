@@ -84,40 +84,43 @@ def get_without_comments(content):
             
 for i,s1 in enumerate(students):
     files1=student_files[s1]
-    if len(files1)!=1:
-        for s2 in students[i+1:]:
-            comments[s1][s2].append("foutieve bestandsstructuur")
-        continue
-    content1=files1[0].read_text(encoding="utf-8")
+    # if len(files1)!=1:
+    #     for s2 in students[i+1:]:
+    #         comments[s1][s2].append("foutieve bestandsstructuur")
+    #     continue
     for s2 in students[i+1:]:
         files2=student_files[s2]
-        if len(files2)!=1:
-            comments[s1][s2].append("foutieve bestandsstructuur")
+        if len(files1)!=len(files2):
+            comments[s1][s2].append("Niet evenveel files")
             continue
-        content2=files2[0].read_text(encoding="utf-8")
-        if content1==content2:
-            comments[s1][s2].append("identieke file")
-        else:
-            comments_1=get_comments(content1)
-            comments_2=get_comments(content2)
-            without_comments_1=get_without_comments(content1)
-            without_comments_2=get_without_comments(content2)
-            if without_comments_1.deep_equals(without_comments_2):
-                comments[s1][s2].append(f"identieke file zonder comments")
+        for idx in range(len(files1)):
+            f1 = files1[idx]
+            f2 = files2[idx]
+            content1 = f1.read_text(encoding="utf-8")
+            content2 = f2.read_text(encoding="utf-8")
+            if content1==content2:
+                comments[s1][s2].append("identieke file")
             else:
-                for com in comments_1:
-                    if com in comments_2:
-                        comments[s1][s2].append(f"identieke comment: '{com}'")
-                misspelled_1=get_misspelled_words(content1)
-                misspelled_2=get_misspelled_words(content2)
-                common_misspelled= misspelled_1 & misspelled_2
-                for word in common_misspelled:
-                    comments[s1][s2].append(f"gemeenschappelijke spelfout: '{word}'")
+                comments_1=get_comments(content1)
+                comments_2=get_comments(content2)
+                without_comments_1=get_without_comments(content1)
+                without_comments_2=get_without_comments(content2)
+                if without_comments_1.deep_equals(without_comments_2):
+                    comments[s1][s2].append(f"identieke file zonder comments")
+                else:
+                    for com in comments_1:
+                        if com in comments_2:
+                            comments[s1][s2].append(f"identieke comment: '{com}'")
+                    misspelled_1=get_misspelled_words(content1)
+                    misspelled_2=get_misspelled_words(content2)
+                    common_misspelled= misspelled_1 & misspelled_2
+                    for word in common_misspelled:
+                        comments[s1][s2].append(f"gemeenschappelijke spelfout: '{word}'")
             
 
 
 env = Environment(loader=FileSystemLoader("."))
 template=env.get_template("template.html")
-html_output=template.render(students=students,comments=comments)
+html_output=template.render(students=students,comments=comments,student_files=student_files)
 with open("output.html","w",encoding="utf-8") as b:
     b.write(html_output)
