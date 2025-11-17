@@ -108,14 +108,19 @@ for i,s1 in enumerate(students):
                 if without_comments_1.deep_equals(without_comments_2):
                     comments[s1][s2].append(f"identieke file zonder comments")
                 else:
-                    for com in comments_1:
-                        if com in comments_2:
-                            comments[s1][s2].append(f"identieke comment: '{com}'")
-                    misspelled_1=get_misspelled_words(content1)
-                    misspelled_2=get_misspelled_words(content2)
-                    common_misspelled= misspelled_1 & misspelled_2
-                    for word in common_misspelled:
-                        comments[s1][s2].append(f"gemeenschappelijke spelfout: '{word}'")
+                    ast_tree_1=ast.parse(content1)
+                    ast_tree_2=ast.parse(content2)
+                    if ast.dump(ast_tree_1)==ast.dump(ast_tree_2):
+                        comments[s1][s2].append(f"identieke Abstract Syntax Tree")
+                    else:
+                        for com in comments_1:
+                            if com in comments_2:
+                                comments[s1][s2].append(f"identieke comment: '{com}'")
+                        misspelled_1=get_misspelled_words(content1)
+                        misspelled_2=get_misspelled_words(content2)
+                        common_misspelled= misspelled_1 & misspelled_2
+                        for word in common_misspelled:
+                            comments[s1][s2].append(f"gemeenschappelijke spelfout: '{word}'")
             
 
 
