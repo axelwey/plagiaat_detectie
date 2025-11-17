@@ -28,9 +28,17 @@
         {% if s1 == s2 %}
           <td>/</td>
         {% elif s2 in comments.get(s1, {}) %}
-          <td>{{ ", ".join(comments[s1][s2]) }}</td>
+          <td>
+            {% for line in comments[s1][s2] %}
+              <div>{{ line }}</div>
+            {% endfor %}
+          </td>
         {% elif s1 in comments.get(s2, {}) %}
-          <td>{{ ", ".join(comments[s2][s1]) }}</td>
+          <td>
+            {% for line in comments[s1][s2] %}
+            <div>{{ line }}</div>
+            {% endfor %}
+          </td>
         {% else %}
           <td>/</td>
         {% endif %}
